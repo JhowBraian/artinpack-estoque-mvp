@@ -13,6 +13,11 @@ O banco de dados (`database.db`, SQLite) é criado automaticamente na primeira e
 1. Instale as dependências de desenvolvimento: `pip install -r requirements-dev.txt`
 2. Rode os testes unitários e de integração com cobertura: `python -m pytest -v --cov=app --cov-report=term-missing`
 
+## Publicação e monitoramento
+- Deploy no Render (plano grátis) pelo arquivo `render.yaml`: o serviço instala as dependências e sobe o app com `gunicorn app:app`, usando `/saude` como verificação de saúde.
+- O workflow `.github/workflows/monitoramento.yml` consulta `APP_URL/saude` a cada 15 minutos e falha (status DOWN) se a resposta não for HTTP 200. A URL fica na variável `APP_URL` do repositório.
+- No plano grátis o disco é temporário: o banco volta aos dados de exemplo quando o serviço reinicia. Use a versão publicada só para demonstração.
+
 ## Configuração (opcional)
 - `SECRET_KEY`: chave usada para assinar a sessão. Sem ela, uma chave aleatória é gerada a cada execução.
 - `FLASK_DEBUG=1`: ativa o modo de depuração. Use apenas em desenvolvimento.

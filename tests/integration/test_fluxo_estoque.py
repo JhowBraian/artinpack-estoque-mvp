@@ -71,3 +71,17 @@ def test_data_com_script_e_escapada_no_painel(cliente):
 
 def test_rota_inexistente_retorna_404(cliente):
     assert cliente.get('/nao-existe').status_code == 404
+
+
+def test_saude_responde_ok_com_banco_disponivel(cliente):
+    resposta = cliente.get('/saude')
+    assert resposta.status_code == 200
+    assert resposta.get_json() == {'status': 'ok'}
+
+
+def test_saude_responde_503_sem_banco_valido(cliente, tmp_path, monkeypatch):
+    import app as aplicacao
+    monkeypatch.setattr(aplicacao, 'DB_NAME', str(tmp_path / 'vazio.db'))
+    resposta = cliente.get('/saude')
+    assert resposta.status_code == 503
+    assert resposta.get_json() == {'status': 'erro'}

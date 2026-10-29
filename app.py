@@ -7,7 +7,7 @@ app = Flask(__name__)
 # A chave de sessão vem do ambiente; sem ela, gera-se uma chave aleatória a cada execução.
 app.secret_key = os.environ.get('SECRET_KEY') or os.urandom(24).hex()
 
-DB_NAME = 'database.db'
+DB_NAME = os.environ.get('DB_PATH', 'database.db')
 MAX_QUANTIDADE = 100000
 
 def init_db():
@@ -64,6 +64,17 @@ def validar_movimentacao(tipo, quantidade, data, responsavel, saldo, produto='')
     if tipo == 'Saída' and quantidade > saldo:
         return f'Estoque insuficiente: há apenas {saldo} unidade(s) de "{produto}".'
     return None
+
+@app.route('/saude')
+def saude():
+    """Verificação de disponibilidade usada pelo monitoramento: confirma que o banco responde."""
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        conn.execute("SELECT COUNT(*) FROM produtos").fetchone()
+        conn.close()
+        return {'status': 'ok'}, 200
+    except sqlite3.Error:
+        return {'status': 'erro'}, 503
 
 @app.route('/')
 def dashboard():
@@ -124,7 +135,9 @@ def movimentacao():
     data_hoje = datetime.now().strftime('%d/%m/%Y %H:%M')
     return render_template('movimentacao.html', produtos=produtos, data_hoje=data_hoje)
 
+# Cria o banco também quando o app é servido pelo gunicorn (produção), e não só via python app.py.
+init_db()
+
 if __name__ == '__main__':
-    init_db()
     # Modo de depuração só quando solicitado (FLASK_DEBUG=1); escuta apenas em 127.0.0.1.
     app.run(debug=os.environ.get('FLASK_DEBUG') == '1', host='127.0.0.1')
