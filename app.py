@@ -39,6 +39,32 @@ def init_db():
         conn.commit()
         conn.close()
 
+def ler_quantidade(valor):
+    """Converte o campo de quantidade; texto inválido vira 0 (recusado na validação)."""
+    try:
+        return int(valor)
+    except (TypeError, ValueError):
+        return 0
+
+def validar_movimentacao(tipo, quantidade, data, responsavel, saldo, produto=''):
+    """Retorna a mensagem de erro da movimentação ou None se ela for válida.
+    saldo é a quantidade atual do produto, ou None se o produto não existir."""
+    if tipo not in ('Entrada', 'Saída'):
+        return 'Tipo de operação inválido.'
+    if quantidade <= 0:
+        return 'A quantidade deve ser maior que zero.'
+    if quantidade > MAX_QUANTIDADE:
+        return f'A quantidade máxima por lançamento é {MAX_QUANTIDADE}.'
+    if not data or len(data) > 30:
+        return 'Informe a data (até 30 caracteres).'
+    if not responsavel or len(responsavel) > 100:
+        return 'Informe o responsável (até 100 caracteres).'
+    if saldo is None:
+        return 'Produto não encontrado.'
+    if tipo == 'Saída' and quantidade > saldo:
+        return f'Estoque insuficiente: há apenas {saldo} unidade(s) de "{produto}".'
+    return None
+
 @app.route('/')
 def dashboard():
     conn = sqlite3.connect(DB_NAME)
@@ -71,29 +97,13 @@ def movimentacao():
         data = request.form.get('data', '').strip()
         responsavel = request.form.get('responsavel', '').strip()
 
-        try:
-            quantidade = int(request.form.get('quantidade', ''))
-        except ValueError:
-            quantidade = 0
+        quantidade = ler_quantidade(request.form.get('quantidade', ''))
 
         cursor.execute("SELECT quantidade FROM produtos WHERE nome = ?", (produto,))
         linha = cursor.fetchone()
+        saldo = linha[0] if linha else None
 
-        erro = None
-        if tipo not in ('Entrada', 'Saída'):
-            erro = 'Tipo de operação inválido.'
-        elif quantidade <= 0:
-            erro = 'A quantidade deve ser maior que zero.'
-        elif quantidade > MAX_QUANTIDADE:
-            erro = f'A quantidade máxima por lançamento é {MAX_QUANTIDADE}.'
-        elif not data or len(data) > 30:
-            erro = 'Informe a data (até 30 caracteres).'
-        elif not responsavel or len(responsavel) > 100:
-            erro = 'Informe o responsável (até 100 caracteres).'
-        elif linha is None:
-            erro = 'Produto não encontrado.'
-        elif tipo == 'Saída' and quantidade > linha[0]:
-            erro = f'Estoque insuficiente: há apenas {linha[0]} unidade(s) de "{produto}".'
+        erro = validar_movimentacao(tipo, quantidade, data, responsavel, saldo, produto)
 
         if erro:
             flash(erro, 'erro')
