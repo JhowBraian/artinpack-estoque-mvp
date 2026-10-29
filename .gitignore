@@ -2,3 +2,7 @@ database.db
 __pycache__/
 .venv/
 venv/
+
+.pytest_cache/
+.coverage
+htmlcov/

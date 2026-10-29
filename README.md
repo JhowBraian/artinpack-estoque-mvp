@@ -9,6 +9,10 @@ Sistema de Gestão de Estoque para a Artinpack (MVP em Python/Flask)
 
 O banco de dados (`database.db`, SQLite) é criado automaticamente na primeira execução, com três produtos de exemplo.
 
+## Testes
+1. Instale as dependências de desenvolvimento: `pip install -r requirements-dev.txt`
+2. Rode os testes unitários e de integração com cobertura: `python -m pytest -v --cov=app --cov-report=term-missing`
+
 ## Configuração (opcional)
 - `SECRET_KEY`: chave usada para assinar a sessão. Sem ela, uma chave aleatória é gerada a cada execução.
 - `FLASK_DEBUG=1`: ativa o modo de depuração. Use apenas em desenvolvimento.
