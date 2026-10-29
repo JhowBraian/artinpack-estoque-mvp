@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-e-testes:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v5
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependências
+        run: pip install -r requirements-dev.txt
+
+      - name: Build (compilar o código)
+        run: python -m compileall -q app.py tests
+
+      - name: Testes unitários e de integração com cobertura
+        run: python -m pytest -v --cov=app --cov-report=term-missing --cov-fail-under=90
