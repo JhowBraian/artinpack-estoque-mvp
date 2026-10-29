@@ -1,0 +1,31 @@
+name: Monitoramento
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  verificar-disponibilidade:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Verificar /saude da aplicação em produção
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          if [ -z "$APP_URL" ]; then
+            echo "Variável APP_URL não configurada no repositório."
+            exit 1
+          fi
+          # O plano grátis do Render hiberna sem uso; as tentativas cobrem o tempo de despertar.
+          for tentativa in 1 2 3 4 5 6; do
+            codigo=$(curl -s -o resposta.json -w "%{http_code}" --max-time 60 "$APP_URL/saude" || echo 000)
+            echo "Tentativa $tentativa: HTTP $codigo"
+            if [ "$codigo" = "200" ]; then
+              echo "STATUS: UP - $(cat resposta.json)"
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "STATUS: DOWN - $APP_URL/saude não respondeu 200"
+          exit 1
