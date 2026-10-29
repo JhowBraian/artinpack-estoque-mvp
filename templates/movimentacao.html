@@ -2,70 +2,82 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Registrar Movimentação - Artinpack</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f9; color: #333; }
-        header { background: #1f2d3d; color: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .container { padding: 30px; max-width: 600px; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-top: 40px; }
+        body { font-family: Arial, sans-serif; font-size: 1rem; line-height: 1.5; margin: 0; background-color: #f4f6f9; color: #1f2d3d; }
+        header { background: #1f2d3d; color: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .marca { font-size: 1.5rem; font-weight: bold; }
+        .container { padding: 30px; max-width: 600px; margin: 40px auto 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        select, input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background: #0056b3; }
-        .nav-links { margin-bottom: 20px; }
-        .nav-links a { margin-right: 15px; text-decoration: none; color: #007bff; font-weight: bold; }
-        .alert { background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+        select, input { width: 100%; min-height: 44px; padding: 10px; font-size: 1rem; border: 1px solid #5f6b7a; border-radius: 4px; box-sizing: border-box; }
+        button { background: #0056b3; color: #fff; border: none; min-height: 44px; min-width: 44px; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: bold; }
+        button:hover { background: #003d80; }
+        :focus-visible { outline: 3px solid #1f2d3d; outline-offset: 2px; }
+        .nav-links { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 8px 16px; }
+        .nav-links a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; color: #0056b3; font-weight: bold; }
+        .alert { background: #d4edda; color: #155724; border-left: 6px solid #155724; padding: 10px 12px; border-radius: 4px; margin-bottom: 15px; }
+        .alert-erro { background: #f8d7da; color: #721c24; border-left-color: #721c24; }
+        .pular { position: absolute; left: -999px; top: 0; background: #fff; color: #0056b3; padding: 8px 12px; }
+        .pular:focus { left: 8px; top: 8px; z-index: 10; }
+        @media (max-width: 600px) { .container { padding: 16px; margin-top: 16px; } header { padding: 12px 16px; } }
     </style>
 </head>
 <body>
+    <a class="pular" href="#conteudo">Ir para o conteúdo</a>
     <header>
-        <h2>Artinpack</h2>
+        <span class="marca">Artinpack</span>
         <span>Ronaldo94</span>
     </header>
-    <div class="container">
-        <div class="nav-links">
+    <main class="container" id="conteudo">
+        <nav class="nav-links" aria-label="Principal">
             <a href="/">Dashboard</a>
-            <a href="/movimentacao">Registrar Movimentação</a>
-        </div>
-        
-        <h2>Registrar Movimentação de Estoque</h2>
-        
-        {% with messages = get_flashed_messages() %}
-          {% if messages %}
-            <div class="alert">{{ messages[0] }}</div>
-          {% endif %}
+            <a href="/movimentacao" aria-current="page">Registrar Movimentação</a>
+        </nav>
+
+        <h1>Registrar Movimentação de Estoque</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for categoria, mensagem in messages %}
+            {% if categoria == 'erro' %}
+            <div class="alert alert-erro" role="alert"><strong>&#9888; Atenção:</strong> {{ mensagem }}</div>
+            {% else %}
+            <div class="alert" role="status"><strong>&#10004; Sucesso:</strong> {{ mensagem }}</div>
+            {% endif %}
+          {% endfor %}
         {% endwith %}
 
         <form method="POST">
             <div class="form-group">
-                <label>Tipo de Operação</label>
-                <select name="tipo">
+                <label for="tipo">Tipo de Operação</label>
+                <select id="tipo" name="tipo">
                     <option value="Entrada">Entrada</option>
                     <option value="Saída">Saída</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Produto</label>
-                <select name="produto">
-                    <option value="Caixa de Papelão Reforçada">Caixa de Papelão Reforçada - ID #102</option>
-                    <option value="Fita Adhesiva Padrão">Fita Adhesiva Padrão - ID #103</option>
-                    <option value="Plástico Bolha (Metro)">Plástico Bolha (Metro) - ID #104</option>
+                <label for="produto">Produto</label>
+                <select id="produto" name="produto">
+                    {% for p in produtos %}
+                    <option value="{{ p[1] }}">{{ p[1] }} - ID #{{ p[0] }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="form-group">
-                <label>Quantidade</label>
-                <input type="number" name="quantidade" required value="10">
+                <label for="quantidade">Quantidade</label>
+                <input id="quantidade" type="number" name="quantidade" required min="1" value="10">
             </div>
             <div class="form-group">
-                <label>Data</label>
-                <input type="text" name="data" value="28/09/2026" required>
+                <label for="data">Data</label>
+                <input id="data" type="text" name="data" value="{{ data_hoje }}" required maxlength="30">
             </div>
             <div class="form-group">
-                <label>Responsável</label>
-                <input type="text" name="responsavel" value="Ronaldo94" required>
+                <label for="responsavel">Responsável</label>
+                <input id="responsavel" type="text" name="responsavel" value="Ronaldo94" required maxlength="100">
             </div>
             <button type="submit">Confirmar Movimentação</button>
         </form>
-    </div>
+    </main>
 </body>
 </html>
